@@ -1,0 +1,30 @@
+name = input("Ad daxil edin: ")
+age = int(input("Yas daxil edin: "))
+month_salary = float(input("Ayliq gelir: "))
+
+probage = 2026 - age
+month_tax = (month_salary*20)/100 #vergi
+final_salary = month_salary - month_tax
+
+print(f"Ad: {name}")
+print(f"Texmini dogum ili: {probage}")
+print(f"Ayliq verginin meblegi: {month_tax}")
+print(f"Vergiden sonra qalan xalis gelir: {final_salary}")
+
+
+
+
+# name = input("Adınızı daxil edin: ")
+# age = int(input("Yaşınızı daxil edin: "))
+# income = float(input("Aylıq gəlirinizi daxil edin: "))
+
+# # Hesablamalar
+# birth_year = 2025 - age
+# tax = income * 0.20
+# net_income = income - tax
+
+# # Nəticələrin göstərilməsi
+# print(f"Salam {name}!")
+# print(f"Sizin təxmini doğum iliniz: {birth_year}")
+# print(f"Aylıq verginin məbləği: {tax:.2f}")
+# print(f"Vergidən sonra qalan xalis gəlir: {net_income:.2f}")
