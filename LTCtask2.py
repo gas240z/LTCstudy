@@ -10,11 +10,14 @@
 #     say-=1
 
 
-#task3
 # metnler = ["Salam", "", "Necəsən", "", "", "Sağ ol"]
+# count = 0
 # for metn in metnler:
 #     if metn == "":
 #         continue
 #     print(metn, end=" ")
+#     count+=1
+# print('')
+# print(count)
 
 
