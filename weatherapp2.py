@@ -1,41 +1,42 @@
-
 import random
 
 
 weather = {
-    "baku": "Sunny",
-    "moscow": "Rainy",
-    "istanbul": "Cloudy",
-    "paris": "Windy",
-    "london": "Foggy"
+    "baki" : "gunesli",
+    "sumqayit": "buludlu",
+    "zerdab": "yagis",
+    "goycay": "yagis",
+    "zaqatala": "gunesli",
+    "qebele": "gunesli",
+    "qax": "kulekli",
+    "qusar": "Dumanli",
 }
 
+#weather["qax"] = 'kulekli'
 
 
+#unique_weather = set()
 history = []
 
+psblewthr = ['kulekli','buludlu','dumanli','yagisli','gunesli' ]
 
-possible_weather = ["Sunny", "Rainy", "Cloudy", "Windy", "Foggy", "Snowy", "Stormy"]
 
 while True:
-    city = input("Seher daxil edin ('exit' cixis ucun): ").lower()
-
-    if city.lower() == "exit":
+    city = input(("Seheri secin ('exit' ---> cixis): ")).lower()
+    if city == 'exit':
         break
-
-    
-    if city not in weather:
-        forecast = random.choice(possible_weather)
-        weather[city] = forecast
-        print(f"Yeni seher daxil edildi: {city} → {forecast}")
-    else:
-        forecast = weather[city]
-        print(f" {city} → {forecast}")
-
-    
-    history.append((city, forecast))
+    elif city in weather:
+        print(f'{city.title()} ━━━> {weather[city]} hava durumu')
+        forecast=""
+        history.append((city.title(),forecast))
+    elif city not in weather:
+        forecast = random.choice(psblewthr) #kuleki
+        history.append((city.title(), forecast)) #gence
+        weather[city]=forecast #gence = kuleki
+        print(f'{city.title()} ━━━> {forecast}') 
 
 
-print("\n Tarixce:")
-for i, (city, forecast) in enumerate(history, start=1):
-    print(f"{i}. {city} → {forecast}")
+print("Tarixce: ")
+
+for i, (city,forecast) in enumerate(history,start=1):
+    print(f'{i}. {city} ━━━> {forecast}')
