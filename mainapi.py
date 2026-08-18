@@ -1,119 +1,115 @@
-from datetime import datetime
-from enum import Enum
-from typing import List, Optional
-from fastapi import APIRouter, FastAPI, HTTPException, Query
-from pydantic import BaseModel, Field
+import email
+
+import psycopg2 
+
+try:
+    conn = psycopg2.connect(
+    port=5432,
+    database="isayevdb",  
+    user="postgres",   
+    password="1999"
+    )
+    print("Postgres-ə uğurla qoşulduq!")
+except UnicodeDecodeError:
+    print("Ошибка подключения: скорее всего неверный пароль (сообщение сервера не удалось декодировать)")
+except psycopg2.OperationalError as e:
+    print(f"Ошибка подключения: {e}")
+conn.close() 
+
+
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+
+engine = create_engine("postgresql+psycopg2://postgres:1999@localhost:5432/isayevdb")
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    email = Column(String(200))
+
+
+Base.metadata.create_all(engine)
+
+
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+name = input("Ad daxil edin: ")
+email = input("E-mail daxil edin: ")
+session.add(User(name=name,email=email))
+session.commit()
+
+
+for user in session.query(User).all():
+    print(f"{user.id} | {user.name} | {user.email}")
+
+session.close()
 
 
 
-class Priority(str, Enum):
-  LOW = "low"
-  MEDIUM = "medium"
-  HIGH = "high"
+while True:
+    ad = input("Yoxlanis etmek ucun ad daxil edin: ").lower()
+    session = Session()
+
+    ad = session.query(User).filter(User.name.ilike(ad)).first()
+
+    if ad:
+        print(f"Tapıldı! Email: {ad.email}")
+        break
+    else:
+        print("Belə istifadəçi yoxdur")
+        continue
 
 
-
-class Note(BaseModel):
-  title: str = Field(..., min_length=1, description="Заголовок заметки")
-  content: str = Field(..., min_length=5, description="Текст заметки")
-  tags: List[str] = Field(
-      default=[], description="Список тегов, например: ['python', 'work']"
-  )
-  priority: Priority = Field(
-      default=Priority.MEDIUM, description="Приоритет: low, medium, high"
-  )
-  created_at: datetime = Field(
-      default_factory=datetime.now, description="Дата и время создания"
-  )
+session.close()
 
 
-class NoteUpdate(BaseModel):
-  title: Optional[str] = Field(None, min_length=1)
-  content: Optional[str] = Field(None, min_length=5)
-  tags: Optional[List[str]] = None
-  priority: Optional[Priority] = None
+# from fastapi import APIRouter, FastAPI, HTTPException
+# from pydantic import BaseModel, Field
+
+# app = FastAPI(title="Qeydlər API-si")
+
+# # Addım 1. Pydantic модель Note
+# class Note(BaseModel):
+#   title: str = Field(..., min_length=1)
+#   content: str = Field(..., min_length=5)
 
 
-app = FastAPI(
-    title="Qeydlər API-si",
-    description="Расширенный API заметок с CRUD, поисками и фильтрацией",
-)
+# # Список для хранения заметок (вместо БД)
+# baza = []
 
-baza: List[Note] = []
-
-router = APIRouter(prefix="/api", tags=["Notes"])
+# # Addım 3. Создаем роутер с префиксом /api и тегом Notes
+# router = APIRouter(prefix="/api", tags=["Notes"])
 
 
-@router.get("/health")
-def health():
-  return {"status": "ok"}
+# # Addım 2 & 3. Перенесенные эндпоинты в router
+# @router.get("/health")
+# def health():
+#   return {"status": "ok"}
 
 
-
-@router.post("/notes", response_model=Note)
-def create_note(note: Note):
-  baza.append(note)
-  return note
-
+# @router.post("/notes")
+# def create_note(note: Note):
+#   baza.append(note)
+#   return note
 
 
-@router.get("/notes", response_model=List[Note])
-def get_all_notes(
-    search: Optional[str] = Query(
-        None, description="Поиск по заголовку или тексту"
-    ),
-    limit: int = Query(
-        10, ge=1, le=100, description="Максимум элементов на страницу"
-    ),
-    offset: int = Query(0, ge=0, description="Сколько элементов пропустить"),
-):
-  filtered_notes = baza
-
- 
-  if search:
-    search_lower = search.lower()
-    filtered_notes = [
-        n
-        for n in filtered_notes
-        if search_lower in n.title.lower() or search_lower in n.content.lower()
-    ]
+# @router.get("/notes")
+# def get_all_notes():
+#   return baza
 
 
-  return filtered_notes[offset : offset + limit]
+# @router.get("/notes/{index}")
+# def get_note(index: int):
+#   if index < 0 or index >= len(baza):
+#     raise HTTPException(status_code=404, detail="Not tapılmadı")
+#   return baza[index]
 
 
-
-@router.get("/notes/{index}", response_model=Note)
-def get_note(index: int):
-  if index < 0 or index >= len(baza):
-    raise HTTPException(status_code=404, detail="Not tapılmadı")
-  return baza[index]
-
-
-
-@router.put("/notes/{index}", response_model=Note)
-def update_note(index: int, note_update: NoteUpdate):
-  if index < 0 or index >= len(baza):
-    raise HTTPException(status_code=404, detail="Not tapılmadı")
-
-  existing_note = baza[index]
-
-
-  update_data = note_update.model_dump(exclude_unset=True)
-  updated_note = existing_note.model_copy(update=update_data)
-
-  baza[index] = updated_note
-  return updated_note
-
-
-
-@router.delete("/notes/{index}")
-def delete_note(index: int):
-  if index < 0 or index >= len(baza):
-    raise HTTPException(status_code=404, detail="Not tapılmadı")
-
-  deleted_note = baza.pop(index)
-  return {"message": "Not silindi", "deleted_note": deleted_note}
-
-
-app.include_router(router)
+# # Подключаем роутер к основному приложению
+# app.include_router(router)
